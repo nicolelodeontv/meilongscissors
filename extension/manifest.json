@@ -1,0 +1,11 @@
+{
+  "manifest_version": 3,
+  "name": "Meilong Scissors Counter",
+  "version": "5.0.0",
+  "description": "Select, count, highlight, and clear clipped individual and team photos on the Sports In Focus portal.",
+  "permissions": ["storage"],
+  "host_permissions": ["https://portal.sportsinfocus.com.au/events/view/*"],
+  "content_scripts": [{"matches":["https://portal.sportsinfocus.com.au/events/view/*"],"js":["content.js"],"run_at":"document_idle"}],
+  "action": {"default_title":"Meilong Scissors Counter","default_popup":"popup.html","default_icon":{"16":"icons/icon16.png","32":"icons/icon32.png","48":"icons/icon48.png","128":"icons/icon128.png"}},
+  "icons":{"16":"icons/icon16.png","32":"icons/icon32.png","48":"icons/icon48.png","128":"icons/icon128.png"}
+}

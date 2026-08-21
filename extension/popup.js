@@ -1,0 +1,7 @@
+const DEFAULTS={enabled:true,autoSelect:true,showNames:true,showPanel:true,defaultMode:'individual'};
+const $=id=>document.getElementById(id);
+async function init(){const s=await chrome.storage.local.get(DEFAULTS);$('enabled').checked=s.enabled;$('autoSelect').checked=s.autoSelect;$('showNames').checked=s.showNames;$('showPanel').checked=s.showPanel;$('defaultMode').value=s.defaultMode;updateStatus(s.enabled);detectPage();$('enabled').onchange=e=>save({enabled:e.target.checked}).then(()=>updateStatus(e.target.checked));['autoSelect','showNames','showPanel'].forEach(id=>$(id).onchange=e=>save({[id]:e.target.checked}));$('defaultMode').onchange=e=>save({defaultMode:e.target.value});$('reset').onclick=async()=>{await save(DEFAULTS);$('enabled').checked=$('autoSelect').checked=$('showNames').checked=$('showPanel').checked=true;$('defaultMode').value='individual';updateStatus(true)}}
+function save(p){return chrome.storage.local.set(p)}
+function updateStatus(v){$('statusText').textContent=v?'Enabled':'Disabled'}
+async function detectPage(){const pill=$('pagePill');try{const [t]=await chrome.tabs.query({active:true,currentWindow:true});const u=t?.url||'';const ok=u.startsWith('https://portal.sportsinfocus.com.au/events/view/');pill.textContent=ok?'Event page':'Open an event page';pill.className='pill '+(ok?'ok':'bad')}catch{pill.textContent='Browser page';pill.className='pill'}}
+init();
