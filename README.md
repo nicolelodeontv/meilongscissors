@@ -1,76 +1,84 @@
 # Meilong Scissors
 
-**Meilong Scissors** is a polished Chrome/Edge Manifest V3 browser extension designed to help streamline photo selection on Sports In Focus event gallery pages.
+A lightweight Chromium browser extension for streamlining photo selection on compatible Sports In Focus event gallery pages.
 
-## Features
+## ✨ Features
 
-- Detects individual and team clipped-photo matches.
-- Optional automatic selection of matching photos.
-- Clear current selections quickly.
-- Draggable and collapsible floating control panel.
-- Remembers panel position and user preferences.
-- Popup settings with an enable/disable switch.
-- Custom extension icons and branded UI.
-- Lightweight, browser-native implementation with no build step required.
+- Detect individual and team clipped-photo matches
+- Optionally select matching photos automatically
+- Clear current selections with one action
+- Draggable and collapsible floating control panel
+- Persistent panel position and user preferences
+- Popup settings with an enable/disable switch
+- Custom extension icons and branded interface
+- Manifest V3 with no build step required
 
-## Project Structure
+## 🧩 How It Works
+
+Meilong Scissors runs on supported Sports In Focus gallery pages and detects photo matches based on the gallery's page structure. Detected matches can be reviewed and, when enabled, selected automatically.
+
+The extension keeps its controls in a floating panel so the gallery remains easy to use while the selection tools are available.
+
+## 📁 Project Structure
 
 ```text
 meilongscissors/
 ├── content.js          # Gallery detection and selection logic
-├── manifest.json        # Chrome/Edge Manifest V3 configuration
-├── popup.html           # Extension settings popup
-├── popup.js             # Popup behavior and preferences
-├── popup.css            # Popup styling
-├── icons/               # Extension icons
-└── README.md            # Project documentation
+├── manifest.json       # Manifest V3 configuration
+├── popup.html          # Extension settings UI
+├── popup.js            # Popup behavior and preferences
+├── popup.css           # Popup styling
+├── icons/              # Extension icons
+└── README.md           # Project documentation
 ```
 
-## Installation
+## 🚀 Installation
 
-The extension can be loaded locally in Chrome or Microsoft Edge using Developer Mode.
+You can install the extension locally in Google Chrome or Microsoft Edge using Developer Mode.
 
-1. Download or clone this repository.
-2. Open `chrome://extensions/` in Chrome, or `edge://extensions/` in Edge.
-3. Turn on **Developer mode**.
-4. Click **Load unpacked**.
-5. Select the folder containing `manifest.json`.
-6. Open a compatible Sports In Focus event gallery page.
+1. Clone or download this repository.
+2. Open `chrome://extensions/` in Chrome or `edge://extensions/` in Edge.
+3. Enable **Developer mode**.
+4. Select **Load unpacked**.
+5. Choose the folder containing `manifest.json`.
+6. Open a compatible Sports In Focus event gallery.
+7. Use the extension popup to enable or disable the extension.
 
-After installation, the extension icon can be used to access its settings and enable or disable the extension.
+## 🛠️ Development
 
-## Usage
+No package manager, bundler, or compilation step is required for normal development.
 
-Once enabled, open a supported Sports In Focus event gallery. The extension adds a floating control panel that can be moved or collapsed as needed.
+1. Edit the extension source files.
+2. Return to the browser's extensions page.
+3. Click **Reload** for the unpacked extension.
+4. Refresh the target gallery page.
+5. Test the updated behavior.
 
-Use the available controls to detect matching individual or team photos, optionally select detected matches automatically, and clear the current selections.
+## 🌐 Browser Support
 
-## Browser Support
-
-The extension is built for modern Chromium-based browsers using **Manifest V3**, including:
+Built for modern Chromium-based browsers using **Manifest V3**:
 
 - Google Chrome
 - Microsoft Edge
 
-## Development
+Other Chromium-based browsers may work but are not specifically tested.
 
-This project is a browser extension and does not require a package manager or compilation step for normal development.
+## ⚠️ Compatibility Notes
 
-To make changes:
+Meilong Scissors depends on the structure and behavior of compatible Sports In Focus event gallery pages. Changes to the source website may require updates to the gallery detection and selection logic.
 
-1. Edit the extension source files.
-2. Open the browser's extensions page.
-3. Use **Reload** on the unpacked extension after making changes.
-4. Refresh the target event gallery page to test the updated behavior.
+The extension is intended as a productivity tool for compatible gallery workflows and does not modify the source website itself.
 
-## Notes
-
-This extension is intended for use with compatible Sports In Focus event gallery pages. Site structure or access changes may require updates to the gallery detection logic.
-
-## Version
+## 📌 Version
 
 Current documented version: **v5.0.0**
 
-## License
+## 📄 License
 
-No open-source license is currently specified for this repository. Unless a license is added, the source should be treated as all rights reserved by the repository owner.
+No open-source license is currently specified. Unless a license is added to this repository, the source code should be treated as **all rights reserved** by the repository owner.
+
+## 👤 Author
+
+**Nicole John Dela Cruz**
+
+GitHub: https://github.com/nicolelodeontv
