@@ -1,25 +1,277 @@
-(() => {
+(function () {
   'use strict';
-  const DEFAULTS={enabled:true,autoSelect:true,showNames:true,showPanel:true,defaultMode:'individual',panelPosition:null};
-  let settings={...DEFAULTS}; let observer=null;
-  const $=(s,r=document)=>r.querySelector(s);
-  const $$=(s,r=document)=>[...r.querySelectorAll(s)];
-  const visible=e=>{if(!e.offsetParent&&getComputedStyle(e).position!=='fixed')return false;const r=e.getBoundingClientRect();return r.width>0&&r.height>0};
-  const click=e=>{if(!e)return;['mousedown','mouseup','click'].forEach(t=>e.dispatchEvent(new MouseEvent(t,{bubbles:true,cancelable:true,view:window,ctrlKey:true,metaKey:true})))};
-  const selected=c=>c.classList.contains('selected')||c.classList.contains('is-selected')||c.getAttribute('aria-selected')==='true'||!!$('input[type="checkbox"]:checked',c);
-  const select=c=>{const x=$('input[type="checkbox"]',c);if(x){if(!x.checked)click(x);return}click($('.photos-files_img-cover-inner',c)||$('img[data-fileid]',c))};
-  const deselect=c=>{const x=$('input[type="checkbox"]',c);if(x){if(x.checked)click(x);return}click($('.photos-files_img-cover-inner',c)||$('img[data-fileid]',c))};
-  const clearMarks=()=>$$('[data-gsc-marked]').forEach(e=>{e.style.outline='';e.removeAttribute('data-gsc-marked')});
-  function clearSelection(){clearMarks();let n=0;$$('.file-sorter_box_thumb').forEach(c=>{if(visible(c)&&selected(c)){deselect(c);n++}});return n}
-  function scan(mode){clearMarks();const seen=new Set(),names=[],color=mode==='team'?'3px solid #2563eb':'3px solid #ef4444';$$('.file-sorter_box_thumb').forEach(c=>{if(!visible(c))return;const clip=$('button[title="Clip"]',c);if(!clip||!clip.classList.contains('bg-green'))return;const indi=!!$('span[title="With Order"] .fa-shopping-cart',c),team=!!$('span[title="Tagged"] .fa-object-group',c);if(mode==='team'?!team||indi:!indi||team)return;const inner=$('.photos-files_img-cover-inner',c),img=$('img[data-fileid]',c),key=(inner&&inner.getAttribute('title'))||(img&&img.getAttribute('data-fileid'));if(!key||seen.has(key))return;seen.add(key);names.push(key);c.style.outline=color;c.setAttribute('data-gsc-marked','1');if(settings.autoSelect)select(c)});return{count:names.length,names}}
-  const escapeHtml=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  function removePanel(){clearMarks();const p=$('#gsc-panel');if(p)p.remove()}
-  function addStyle(){if($('#gsc-style'))return;const s=document.createElement('style');s.id='gsc-style';s.textContent=`#gsc-panel{position:fixed;top:16px;right:16px;z-index:999999;width:332px;background:#fff;border:1px solid #eee7d5;border-radius:18px;box-shadow:0 18px 55px rgba(53,44,9,.16),0 3px 12px rgba(0,0,0,.07);font:12px Inter,system-ui,sans-serif;overflow:hidden;color:#2f2a1e}#gsc-panel *{box-sizing:border-box}#gsc-header{display:flex;align-items:center;justify-content:space-between;padding:15px 16px;background:linear-gradient(135deg,#ffe36a,#f3c12d 55%,#e6b11a);cursor:grab}#gsc-title{font-weight:800;font-size:15px}#gsc-sub{display:block;font-size:9px;opacity:.65;letter-spacing:.8px;margin-top:2px;text-transform:uppercase}#gsc-collapse{border:0;background:rgba(61,48,4,.13);width:28px;height:28px;border-radius:8px;cursor:pointer;font-size:16px}#gsc-body{padding:15px}.gsc-note{margin-bottom:10px;padding:7px 9px;border:1px solid #ece4c5;background:#fffaf0;border-radius:9px;color:#876c0d;font-weight:700;text-align:center;font-size:10px}.gsc-btn{width:100%;padding:11px 13px;margin:0 0 8px;border:0;border-radius:10px;cursor:pointer;font-weight:800}.gsc-ind{background:linear-gradient(135deg,#ffe36a,#eeb80d);color:#4a3b06}.gsc-team{background:linear-gradient(135deg,#6bb1ff,#2563eb);color:#fff}.gsc-clear{background:#fff;border:1px solid #ecd6d6;color:#b42323}.gsc-status{text-align:center;color:#817968;font-size:10.5px;min-height:16px}.gsc-results{display:none;margin-top:12px;padding-top:12px;border-top:1px solid #f0ede6}.gsc-count{display:flex;justify-content:space-between;padding:10px 12px;border-radius:10px;background:#fff7df;font-weight:900}.gsc-count.team{background:#e7efff;color:#1d3f9c}.gsc-names{max-height:210px;overflow:auto;margin-top:8px}.gsc-name{padding:7px 9px;margin:5px 0;background:#fbfaf6;border-left:3px solid #e9b409;border-radius:7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.gsc-name.team{border-left-color:#2563eb}.gsc-hidden #gsc-names{display:none}.gsc-collapsed #gsc-body{display:none}`;document.head.appendChild(s)}
-  function createPanel(){if($('#gsc-panel')||!settings.enabled||!settings.showPanel)return;addStyle();const p=document.createElement('div');p.id='gsc-panel';p.innerHTML='<div id="gsc-header"><div id="gsc-title">✂️ Meilong Scissors<span id="gsc-sub">Photo selection utility</span></div><button id="gsc-collapse">−</button></div><div id="gsc-body"><div class="gsc-note">Default scan: '+(settings.defaultMode==='team'?'Team photos':'Individual photos')+'</div><button class="gsc-btn gsc-ind" id="gsc-run">✂️ Select Individual Clipped</button><button class="gsc-btn gsc-team" id="gsc-run-team">✂️ Select Team Clipped</button><button class="gsc-btn gsc-clear" id="gsc-clear">🧹 Clear Selected</button><div class="gsc-status" id="gsc-status"></div><div class="gsc-results" id="gsc-results"><div class="gsc-count" id="gsc-count"><span>Matches</span><b id="gsc-value">0</b></div><div class="gsc-names" id="gsc-names"></div></div></div>';document.body.appendChild(p);if(settings.panelPosition){p.style.right='auto';p.style.left=Math.max(0,Math.min(innerWidth-p.offsetWidth,settings.panelPosition.left))+'px';p.style.top=Math.max(0,Math.min(innerHeight-p.offsetHeight,settings.panelPosition.top))+'px'}
-    $('#gsc-collapse',p).onclick=()=>p.classList.toggle('gsc-collapsed');
-    const render=(mode,r)=>{$('#gsc-count',p).classList.toggle('team',mode==='team');$('#gsc-value',p).textContent=r.count;$('#gsc-names',p).innerHTML=settings.showNames?r.names.map(n=>'<div class="gsc-name '+(mode==='team'?'team':'')+'" title="'+escapeHtml(n)+'">'+escapeHtml(n)+'</div>').join(''):'';$('#gsc-results',p).style.display='block';$('#gsc-status',p).textContent=r.count+' '+(mode==='team'?'team':'individual')+' match'+(r.count===1?'':'es')+(settings.autoSelect?' and selected.':'.')};
-    $('#gsc-run',p).onclick=()=>render('individual',scan('individual'));$('#gsc-run-team',p).onclick=()=>render('team',scan('team'));$('#gsc-clear',p).onclick=()=>{$('#gsc-results',p).style.display='none';const n=clearSelection();$('#gsc-status',p).textContent=n?'Cleared '+n+' selection'+(n===1?'':'s')+'.':'Nothing selected to clear.'};
-    const head=$('#gsc-header',p);let drag=false,ox=0,oy=0;head.onmousedown=e=>{if(e.target.closest('#gsc-collapse'))return;drag=true;const r=p.getBoundingClientRect();ox=e.clientX-r.left;oy=e.clientY-r.top;p.style.right='auto';p.style.left=r.left+'px';p.style.top=r.top+'px';e.preventDefault()};const move=e=>{if(!drag)return;p.style.left=Math.max(0,Math.min(innerWidth-p.offsetWidth,e.clientX-ox))+'px';p.style.top=Math.max(0,Math.min(innerHeight-p.offsetHeight,e.clientY-oy))+'px'};const up=()=>{if(!drag)return;drag=false;const r=p.getBoundingClientRect();chrome.storage.local.set({panelPosition:{left:r.left,top:r.top}})};document.addEventListener('mousemove',move);document.addEventListener('mouseup',up)}
-  async function init(){settings=await chrome.storage.local.get(DEFAULTS);if(settings.enabled&&settings.showPanel)createPanel();observer=new MutationObserver(()=>{if(settings.enabled&&settings.showPanel)createPanel()});observer.observe(document.body,{childList:true,subtree:true})}
-  chrome.storage.onChanged.addListener((changes,area)=>{if(area!=='local')return;for(const k in changes)settings[k]=changes[k].newValue;if(!settings.enabled||!settings.showPanel)removePanel();else{removePanel();createPanel()}});init();
+
+  const DEFAULTS = {
+    enabled: true,
+    autoSelect: true,
+    showNames: true,
+    showPanel: true,
+    defaultMode: 'individual',
+    panelPosition: null
+  };
+
+  let settings = { ...DEFAULTS };
+  let observer = null;
+  let dragCleanup = null;
+
+  function isVisible(el) {
+    if (!el.offsetParent && window.getComputedStyle(el).position !== 'fixed') return false;
+    const rect = el.getBoundingClientRect();
+    return rect.width > 0 && rect.height > 0;
+  }
+
+  function simulateClick(el) {
+    if (!el) return;
+    ['mousedown', 'mouseup', 'click'].forEach(type => {
+      el.dispatchEvent(new MouseEvent(type, {
+        bubbles: true,
+        cancelable: true,
+        view: window,
+        ctrlKey: true,
+        metaKey: true,
+        shiftKey: false
+      }));
+    });
+  }
+
+  function isSelected(card) {
+    return card.classList.contains('selected') ||
+           card.classList.contains('is-selected') ||
+           card.getAttribute('aria-selected') === 'true' ||
+           card.querySelector('input[type="checkbox"]:checked') != null;
+  }
+
+  function selectCard(card) {
+    const checkbox = card.querySelector('input[type="checkbox"]');
+    if (checkbox) {
+      if (!checkbox.checked) simulateClick(checkbox);
+      return;
+    }
+    const cover = card.querySelector('.photos-files_img-cover-inner') || card.querySelector('img[data-fileid]');
+    if (cover) simulateClick(cover);
+  }
+
+  function deselectCard(card) {
+    const checkbox = card.querySelector('input[type="checkbox"]');
+    if (checkbox) {
+      if (checkbox.checked) simulateClick(checkbox);
+      return;
+    }
+    const cover = card.querySelector('.photos-files_img-cover-inner') || card.querySelector('img[data-fileid]');
+    if (cover) simulateClick(cover);
+  }
+
+  function clearMarkers() {
+    document.querySelectorAll('[data-gsc-marked]').forEach(el => {
+      el.style.outline = '';
+      el.removeAttribute('data-gsc-marked');
+    });
+  }
+
+  function clearSelection() {
+    clearMarkers();
+    const cards = Array.from(document.querySelectorAll('.file-sorter_box_thumb'));
+    let cleared = 0;
+    cards.forEach(card => {
+      if (!isVisible(card)) return;
+      if (isSelected(card)) {
+        deselectCard(card);
+        cleared++;
+      }
+    });
+    return cleared;
+  }
+
+  function runCount(mode, autoSelect) {
+    clearMarkers();
+    const outlineColor = mode === 'team' ? '3px solid #2563eb' : '3px solid #ef4444';
+    const cards = Array.from(document.querySelectorAll('.file-sorter_box_thumb'));
+    const seen = new Set();
+    const matches = [];
+
+    cards.forEach(card => {
+      if (!isVisible(card)) return;
+      const scissors = card.querySelector('button[title="Clip"]');
+      if (!scissors || !scissors.classList.contains('bg-green')) return;
+
+      const isIndividual = !!card.querySelector('span[title="With Order"] .fa-shopping-cart');
+      const isTeam = !!card.querySelector('span[title="Tagged"] .fa-object-group');
+      const matchesMode = mode === 'team' ? (isTeam && !isIndividual) : (isIndividual && !isTeam);
+      if (!matchesMode) return;
+
+      const inner = card.querySelector('.photos-files_img-cover-inner');
+      const img = card.querySelector('img[data-fileid]');
+      const key = (inner && inner.getAttribute('title')) || (img && img.getAttribute('data-fileid')) || null;
+      if (!key || seen.has(key)) return;
+
+      seen.add(key);
+      matches.push({ card, name: key });
+      card.style.outline = outlineColor;
+      card.setAttribute('data-gsc-marked', '1');
+      if (autoSelect) selectCard(card);
+    });
+
+    console.log(`${mode === 'team' ? 'Team' : 'Individual'} clipped photos:`, matches.length);
+    console.log(matches.map(m => m.name));
+    return { count: matches.length, names: matches.map(m => m.name) };
+  }
+
+  function removePanel() {
+    clearMarkers();
+    if (dragCleanup) { dragCleanup(); dragCleanup = null; }
+    const panel = document.getElementById('gsc-panel');
+    if (panel) panel.remove();
+  }
+
+  function addStyles() {
+    if (document.getElementById('gsc-style')) return;
+    const style = document.createElement('style');
+    style.id = 'gsc-style';
+    style.textContent = `
+      #gsc-panel{position:fixed;top:16px;right:16px;z-index:999999;width:332px;background:#f5f5f2;border:1px solid #cfcfca;border-radius:8px;box-shadow:0 10px 28px rgba(0,0,0,.10);font-family:"JetBrains Mono",monospace;overflow:hidden;user-select:none;color:#171717}
+      #gsc-panel *{box-sizing:border-box}#gsc-panel button{font:inherit}#gsc-header{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:13px 14px;background:#171717;color:#f5f5f2;cursor:grab;position:relative;overflow:hidden;border-bottom:1px solid #2d2d2d}
+      #gsc-header:after{content:"";position:absolute;right:-45px;top:-70px;width:150px;height:150px;border-radius:50%;background:rgba(226,182,32,.16);pointer-events:none}#gsc-header:active{cursor:grabbing}
+      #gsc-title{display:flex;align-items:center;gap:9px;font-size:12px;font-weight:700;letter-spacing:-.2px;position:relative;z-index:1}#gsc-title-emoji{font-size:16px;line-height:1;filter:grayscale(1)}
+      #gsc-title-sub{display:block;font-size:7px;font-weight:700;opacity:.6;letter-spacing:1px;margin-top:3px;text-transform:uppercase}
+      #gsc-collapse{background:#2a2a2a;border:1px solid #414141;color:#e2b620;width:24px;height:24px;border-radius:4px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;z-index:2}
+      #gsc-body{padding:13px}.gsc-default{margin-bottom:9px;padding:7px 9px;border:1px solid #d8d8d2;background:#fafaf7;border-radius:4px;color:#666;font-size:8px;font-weight:700;text-align:center}
+      #gsc-actions{display:grid;gap:7px}.gsc-btn{width:100%;padding:10px 12px;border:1px solid #cfcfca;border-radius:4px;cursor:pointer;font-size:9px;font-weight:700;letter-spacing:0;transition:transform .1s,background .15s,border-color .15s}.gsc-btn:active{transform:scale(.99)}
+      #gsc-run-btn{background:#e2b620;color:#171717;border-color:#c8a01c}#gsc-run-btn:hover{background:#d9ad1d}
+      #gsc-run-team-btn{background:#e9ecef;color:#27313a;border-color:#c6ccd1}#gsc-run-team-btn:hover{background:#e1e4e7}
+      #gsc-clear-btn{background:#fff;color:#8a4141;border-color:#ddc4c4}.gsc-btn.secondary{box-shadow:none}.gsc-btn.secondary:hover{background:#f7eeee}
+      #gsc-status{font-size:8px;font-weight:700;color:#777;text-align:center;min-height:14px;margin-top:8px}
+      #gsc-results{display:none;margin-top:11px;padding-top:11px;border-top:1px solid #dfdfd9}.gsc-count{display:flex;align-items:center;justify-content:space-between;padding:9px 11px;border-radius:4px;background:#fafaf7;border:1px solid #d8d8d2}.gsc-count.team{background:#f0f2f4;border-color:#ccd2d7}.gsc-count-label{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#777}.gsc-count.team .gsc-count-label{color:#58626b}.gsc-count-value{font-size:21px;font-weight:700;color:#171717}.gsc-count.team .gsc-count-value{color:#34424e}
+      #gsc-names{max-height:210px;overflow:auto;display:flex;flex-direction:column;gap:4px;margin-top:8px}.gsc-name{font-size:8px;font-weight:600;color:#444;padding:7px 8px;background:#fbfbf8;border-radius:3px;border-left:2px solid #e2b620;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.gsc-name.team{border-left-color:#7e8a93}
+      #gsc-panel.gsc-hidden-names #gsc-names{display:none}
+      #gsc-panel.gsc-collapsed{width:220px}.gsc-collapsed #gsc-body{display:none}.gsc-collapsed #gsc-collapse:after{content:"+"}.gsc-collapsed #gsc-collapse{font-size:0}.gsc-collapsed #gsc-collapse:after{font-size:14px}
+    `;
+    document.head.appendChild(style);
+  }
+
+  function createPanel() {
+    if (document.getElementById('gsc-panel') || !settings.enabled || !settings.showPanel) return;
+    addStyles();
+
+    const panel = document.createElement('div');
+    panel.id = 'gsc-panel';
+    if (!settings.showNames) panel.classList.add('gsc-hidden-names');
+    panel.innerHTML = `
+      <div id="gsc-header">
+        <div id="gsc-title"><span id="gsc-title-emoji">✂️</span><span><span>Meilong Scissors</span><span id="gsc-title-sub">Photo selection utility</span></span></div>
+        <button id="gsc-collapse" title="Collapse">−</button>
+      </div>
+      <div id="gsc-body">
+        <div class="gsc-default">Default scan: ${settings.defaultMode === 'team' ? 'Team photos' : 'Individual photos'}</div>
+        <div id="gsc-actions">
+          <button id="gsc-run-btn" class="gsc-btn">✂️ Select Individual Clipped</button>
+          <button id="gsc-run-team-btn" class="gsc-btn">✂️ Select Team Clipped</button>
+          <button id="gsc-clear-btn" class="gsc-btn secondary">🧹 Clear Selected</button>
+        </div>
+        <div id="gsc-status"></div>
+        <div id="gsc-results">
+          <div id="gsc-count-row" class="gsc-count"><span class="gsc-count-label">Matches</span><span id="gsc-count-value" class="gsc-count-value">0</span></div>
+          <div id="gsc-names"></div>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(panel);
+
+    if (settings.panelPosition && Number.isFinite(settings.panelPosition.left) && Number.isFinite(settings.panelPosition.top)) {
+      panel.style.right = 'auto';
+      panel.style.left = Math.max(0, Math.min(window.innerWidth - panel.offsetWidth, settings.panelPosition.left)) + 'px';
+      panel.style.top = Math.max(0, Math.min(window.innerHeight - panel.offsetHeight, settings.panelPosition.top)) + 'px';
+    }
+
+    const header = panel.querySelector('#gsc-header');
+    let dragging = false, offsetX = 0, offsetY = 0;
+    header.addEventListener('mousedown', e => {
+      if (e.target.closest('#gsc-collapse')) return;
+      dragging = true;
+      const rect = panel.getBoundingClientRect();
+      offsetX = e.clientX - rect.left; offsetY = e.clientY - rect.top;
+      panel.style.right = 'auto'; panel.style.left = rect.left + 'px'; panel.style.top = rect.top + 'px';
+      e.preventDefault();
+    });
+    const onMove = e => {
+      if (!dragging) return;
+      const maxLeft = Math.max(0, window.innerWidth - panel.offsetWidth);
+      const maxTop = Math.max(0, window.innerHeight - panel.offsetHeight);
+      panel.style.left = Math.min(Math.max(0, e.clientX - offsetX), maxLeft) + 'px';
+      panel.style.top = Math.min(Math.max(0, e.clientY - offsetY), maxTop) + 'px';
+    };
+    const onUp = () => {
+      if (!dragging) return;
+      dragging = false;
+      const rect = panel.getBoundingClientRect();
+      chrome.storage.local.set({ panelPosition: { left: rect.left, top: rect.top } });
+    };
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+    dragCleanup = () => {
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+    };
+
+    const collapse = panel.querySelector('#gsc-collapse');
+    collapse.addEventListener('click', () => panel.classList.toggle('gsc-collapsed'));
+
+    const results = panel.querySelector('#gsc-results');
+    const countRow = panel.querySelector('#gsc-count-row');
+    const countValue = panel.querySelector('#gsc-count-value');
+    const names = panel.querySelector('#gsc-names');
+    const status = panel.querySelector('#gsc-status');
+
+    function renderResults(mode, result) {
+      countRow.classList.toggle('team', mode === 'team');
+      countValue.textContent = result.count;
+      names.innerHTML = settings.showNames ? result.names.map(n => `<div class="gsc-name${mode === 'team' ? ' team' : ''}" title="${escapeHtml(n)}">${escapeHtml(n)}</div>`).join('') : '';
+      panel.classList.toggle('gsc-hidden-names', !settings.showNames);
+      results.style.display = 'block';
+      status.textContent = `${result.count} ${mode === 'team' ? 'team' : 'individual'} match${result.count === 1 ? '' : 'es'} found${settings.autoSelect ? ' and selected' : ''}.`;
+    }
+
+    panel.querySelector('#gsc-run-btn').addEventListener('click', () => renderResults('individual', runCount('individual', settings.autoSelect)));
+    panel.querySelector('#gsc-run-team-btn').addEventListener('click', () => renderResults('team', runCount('team', settings.autoSelect)));
+    panel.querySelector('#gsc-clear-btn').addEventListener('click', () => {
+      const cleared = clearSelection();
+      results.style.display = 'none';
+      status.textContent = cleared > 0 ? `Cleared ${cleared} selection${cleared === 1 ? '' : 's'}.` : 'Nothing selected to clear.';
+    });
+
+    // Visually prioritize the selected default mode.
+    const defaultBtn = settings.defaultMode === 'team' ? panel.querySelector('#gsc-run-team-btn') : panel.querySelector('#gsc-run-btn');
+    defaultBtn.style.boxShadow = settings.defaultMode === 'team' ? '0 5px 13px rgba(37,99,235,.38)' : '0 5px 13px rgba(209,157,0,.38)';
+  }
+
+  function escapeHtml(value) {
+    return String(value).replace(/[&<>'"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[ch]));
+  }
+
+  async function loadSettings() {
+    settings = await new Promise(resolve => chrome.storage.local.get(DEFAULTS, resolve));
+  }
+
+  function installObserver() {
+    if (observer || !document.body) return;
+    observer = new MutationObserver(() => {
+      if (settings.enabled && settings.showPanel) createPanel();
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+  }
+
+  chrome.storage.onChanged.addListener(async (changes, area) => {
+    if (area !== 'local') return;
+    Object.keys(changes).forEach(key => { settings[key] = changes[key].newValue; });
+    if (!settings.enabled || !settings.showPanel) removePanel();
+    else {
+      removePanel();
+      createPanel();
+    }
+  });
+
+  (async function init() {
+    await loadSettings();
+    if (settings.enabled && settings.showPanel) createPanel();
+    installObserver();
+  })();
 })();
